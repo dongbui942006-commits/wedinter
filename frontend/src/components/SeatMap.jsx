@@ -1,261 +1,194 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const SeatMap = ({ onSelectionChange }) => {
-  const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const cols = [1, 2, 3, 4, 5, 6, 7, 8];
+const SeatMap = ({ selectedSeats = [], onSelectionChange }) => {
+  const rows = ['A', 'B', 'C', 'D', 'E'];
+  const seatsPerRow = 8;
 
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  const [showEmptySeats, setShowEmptySeats] = useState(false);
-  const [showOccupiedSeats, setShowOccupiedSeats] = useState(false);
+  const safeSelectedSeats = Array.isArray(selectedSeats) ? selectedSeats : [];
 
-  // Ghế đã có người đặt
-  const occupied = ['B3', 'B4', 'D1', 'D2', 'F5'];
+  const handleSeatClick = (seatId) => {
+    let newSelectedSeats = [];
 
-  const emptySeatsList = [];
-  rows.forEach((row) => {
-    cols.forEach((col) => {
-      const seatId = `${row}${col}`;
-      if (!occupied.includes(seatId) && !selectedSeats.includes(seatId)) {
-        emptySeatsList.push(seatId);
-      }
-    });
-  });
-
-
-  const toggleSeat = (seatId) => {
-    if (occupied.includes(seatId)) return;
-
-    let newSelection;
-
-    if (selectedSeats.includes(seatId)) {
-      newSelection = selectedSeats.filter((seat) => seat !== seatId);
+    if (safeSelectedSeats.includes(seatId)) {
+      newSelectedSeats = safeSelectedSeats.filter((seat) => seat !== seatId);
     } else {
-      newSelection = [...selectedSeats, seatId];
+      newSelectedSeats = [...safeSelectedSeats, seatId];
     }
 
-    setSelectedSeats(newSelection);
-    onSelectionChange(newSelection);
+    console.log('SEATMAP - Ghế vừa bấm:', seatId);
+    console.log('SEATMAP - Gửi danh sách ghế lên App:', newSelectedSeats);
+
+    if (typeof onSelectionChange === 'function') {
+      onSelectionChange(newSelectedSeats);
+    } else {
+      console.error('LỖI: App chưa truyền onSelectionChange vào SeatMap');
+    }
   };
 
   return (
-    <div className="seat-booking">
-      <div className="screen-container">
-        <div className="screen"></div>
-        <p>MÀN HÌNH</p>
-      </div>
+    <div className="seat-map">
+      <div className="screen">MÀN HÌNH</div>
 
-      <div className="seats-grid">
+      <div className="seats">
         {rows.map((row) => (
           <div key={row} className="seat-row">
             <span className="row-label">{row}</span>
 
-            {cols.map((col) => {
-              const seatId = `${row}${col}`;
-              const isOccupied = occupied.includes(seatId);
-              const isSelected = selectedSeats.includes(seatId);
+            {Array.from({ length: seatsPerRow }, (_, index) => {
+              const seatId = `${row}${index + 1}`;
+              const isSelected = safeSelectedSeats.includes(seatId);
 
               return (
-                <div
+                <button
                   key={seatId}
-                  className={`seat ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''
-                    }`}
-                  onClick={() => toggleSeat(seatId)}
-                  title={
-                    isOccupied
-                      ? 'Ghế đã được đặt'
-                      : isSelected
-                        ? 'Bấm để bỏ chọn ghế'
-                        : 'Bấm để chọn ghế'
-                  }
+                  type="button"
+                  className={`seat ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleSeatClick(seatId)}
                 >
-                  {col}
-                </div>
+                  {seatId}
+                </button>
               );
             })}
           </div>
         ))}
       </div>
 
-      <div className="legend">
-        <div className="legend-item" onClick={() => setShowEmptySeats(!showEmptySeats)} style={{ cursor: 'pointer' }} title="Bấm để xem danh sách">
-          <div className="seat"></div>
-          Ghế trống
-        </div>
+      <div className="seat-note">
+        <span className="seat-demo normal"></span>
+        <span>Ghế trống</span>
 
-        <div className="legend-item">
-          <div className="seat selected"></div>
-          Ghế đang chọn
-        </div>
-
-        <div className="legend-item" onClick={() => setShowOccupiedSeats(!showOccupiedSeats)} style={{ cursor: 'pointer' }} title="Bấm để xem danh sách">
-          <div className="seat occupied"></div>
-          Ghế đã đặt
-        </div>
+        <span className="seat-demo selected"></span>
+        <span>Ghế đã chọn</span>
       </div>
 
-      <div className="selected-info">
-        <div style={{ marginBottom: '0.5rem' }}>
-          Số ghế còn trống: <strong>{emptySeatsList.length}</strong>
-        </div>
-
-        {showEmptySeats && emptySeatsList.length > 0 && (
-          <div style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-            Danh sách ghế trống: <strong>{emptySeatsList.join(', ')}</strong>
-          </div>
-        )}
-
-        {showOccupiedSeats && occupied.length > 0 && (
-          <div style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ff6b6b' }}>
-            Danh sách ghế đã đặt: <strong>{occupied.join(', ')}</strong>
-          </div>
-        )}
-
-        {selectedSeats.length > 0 && (
-          <div>
-            Ghế bạn đã chọn: <strong>{selectedSeats.join(', ')}</strong>
-          </div>
-        )}
+      <div className="selected-seat-info">
+        Ghế đang chọn:{' '}
+        <strong>
+          {safeSelectedSeats.length > 0
+            ? safeSelectedSeats.join(', ')
+            : 'Chưa chọn ghế'}
+        </strong>
       </div>
 
       <style>{`
-        .seat-booking {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+        .seat-map {
           padding: 2rem;
-          background: var(--bg-secondary);
           border-radius: 20px;
-        }
-
-        .screen-container {
-          width: 100%;
-          margin-bottom: 3rem;
-          text-align: center;
-        }
-
-        .screen-container p {
-          color: var(--text-muted);
-          font-weight: 600;
-          letter-spacing: 2px;
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
+          box-shadow: var(--glass-shadow);
         }
 
         .screen {
-          height: 10px;
-          background: var(--accent-gold);
           width: 80%;
-          margin: 0 auto 10px;
-          border-radius: 50%;
-          box-shadow: 0 10px 20px rgba(255, 193, 7, 0.4);
+          margin: 0 auto 2rem;
+          padding: 0.8rem;
+          text-align: center;
+          border-radius: 0 0 50px 50px;
+          background: linear-gradient(90deg, #facc15, #f59e0b);
+          color: #000;
+          font-weight: 800;
+          letter-spacing: 2px;
         }
 
-        .seats-grid {
+        .seats {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 1rem;
+          align-items: center;
         }
 
         .seat-row {
           display: flex;
-          gap: 10px;
           align-items: center;
+          gap: 0.7rem;
         }
 
         .row-label {
-          width: 20px;
-          color: var(--text-muted);
-          font-weight: 600;
+          width: 24px;
+          font-weight: 700;
+          color: var(--accent-gold);
         }
 
         .seat {
-          width: 35px;
-          height: 35px;
-          background: var(--glass-bg);
+          width: 42px;
+          height: 42px;
+          border-radius: 10px;
           border: 1px solid var(--glass-border);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.8rem;
+          background: rgba(255, 255, 255, 0.08);
+          color: white;
           cursor: pointer;
-          transition: var(--transition);
-          user-select: none;
+          font-weight: 700;
+          transition: 0.2s ease;
         }
 
-        .seat:hover:not(.occupied) {
+        .seat:hover {
           border-color: var(--accent-gold);
-          transform: scale(1.1);
+          color: var(--accent-gold);
+          transform: translateY(-2px);
         }
 
         .seat.selected {
           background: var(--accent-gold);
           color: black;
           border-color: var(--accent-gold);
-          box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
         }
 
-        .seat.occupied {
-          background: #333;
-          border-color: #444;
-          color: #555;
-          cursor: not-allowed;
-        }
-
-        .legend {
-          display: flex;
-          gap: 2rem;
-          margin-top: 3rem;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 0.9rem;
-          color: var(--text-muted);
-        }
-
-        .legend-item .seat {
-          width: 20px;
-          height: 20px;
-          cursor: default;
-        }
-
-        .legend-item .seat:hover {
-          transform: none;
-        }
-
-        .selected-info {
+        .seat-note {
           margin-top: 2rem;
-          padding: 1rem 1.5rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.7rem;
+          color: var(--text-muted);
+          flex-wrap: wrap;
+        }
+
+        .seat-demo {
+          width: 18px;
+          height: 18px;
+          border-radius: 5px;
+          display: inline-block;
+          border: 1px solid var(--glass-border);
+        }
+
+        .seat-demo.normal {
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .seat-demo.selected {
+          background: var(--accent-gold);
+          border-color: var(--accent-gold);
+        }
+
+        .selected-seat-info {
+          margin-top: 1.5rem;
+          padding: 1rem;
           border-radius: 12px;
-          background: var(--glass-bg);
+          background: rgba(255, 255, 255, 0.04);
           border: 1px solid var(--glass-border);
           color: var(--text-muted);
+          text-align: center;
         }
 
-        .selected-info strong {
+        .selected-seat-info strong {
           color: var(--accent-gold);
         }
 
         @media (max-width: 600px) {
-          .seat-booking {
+          .seat-map {
             padding: 1rem;
+            overflow-x: auto;
           }
 
           .seat {
-            width: 30px;
-            height: 30px;
+            width: 34px;
+            height: 34px;
             font-size: 0.75rem;
           }
 
           .seat-row {
-            gap: 6px;
-          }
-
-          .legend {
-            gap: 1rem;
+            gap: 0.4rem;
           }
         }
       `}</style>

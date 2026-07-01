@@ -1,33 +1,49 @@
 import React from 'react';
 
 const MovieCard = ({ movie, onClick }) => {
+  if (!movie) {
+    return null;
+  }
+
+  const image =
+    movie.image ||
+    'https://via.placeholder.com/400x600?text=No+Image';
+
+  const title = movie.title || 'Chưa có tên phim';
+  const genre = movie.genre || 'Đang cập nhật';
+  const duration = movie.duration || 'Đang cập nhật';
+  const rating = movie.rating || 'N/A';
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick(movie);
+    }
+  };
+
   return (
-    <div className="movie-card glass" onClick={() => onClick(movie)}>
+    <div className="movie-card glass" onClick={handleClick}>
       <div className="movie-poster">
-        <img src={movie.image} alt={movie.title} />
+        <img src={image} alt={title} />
 
         <div className="movie-rating">
-          <span>★</span> {movie.rating}
+          <span>★</span> {rating}
         </div>
       </div>
 
       <div className="movie-info">
-        <h3>{movie.title}</h3>
+        <h3>{title}</h3>
 
-        <p className="genre">
-          Thể loại: {movie.genre}
-        </p>
+        <p className="genre">Thể loại: {genre}</p>
 
         <div className="movie-footer">
-          <span className="duration">
-            Thời lượng: {movie.duration}
-          </span>
+          <span className="duration">Thời lượng: {duration}</span>
 
           <button
+            type="button"
             className="btn btn-primary"
             onClick={(e) => {
               e.stopPropagation();
-              onClick(movie);
+              handleClick();
             }}
           >
             Đặt vé
@@ -40,6 +56,7 @@ const MovieCard = ({ movie, onClick }) => {
           overflow: hidden;
           transition: var(--transition);
           cursor: pointer;
+          border-radius: 18px;
         }
 
         .movie-card:hover {
@@ -51,29 +68,31 @@ const MovieCard = ({ movie, onClick }) => {
           position: relative;
           height: 350px;
           overflow: hidden;
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .movie-poster img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
           transition: var(--transition);
         }
 
         .movie-card:hover .movie-poster img {
-          transform: scale(1.1);
+          transform: scale(1.08);
         }
 
         .movie-rating {
           position: absolute;
           top: 1rem;
           right: 1rem;
-          background: rgba(0, 0, 0, 0.7);
+          background: rgba(0, 0, 0, 0.75);
           backdrop-filter: blur(4px);
-          padding: 0.3rem 0.6rem;
+          padding: 0.35rem 0.65rem;
           border-radius: 8px;
           font-size: 0.9rem;
-          font-weight: 600;
+          font-weight: 700;
           color: var(--accent-gold);
         }
 
@@ -84,6 +103,7 @@ const MovieCard = ({ movie, onClick }) => {
         .movie-info h3 {
           margin-bottom: 0.5rem;
           font-size: 1.2rem;
+          line-height: 1.3;
         }
 
         .genre {
@@ -104,8 +124,24 @@ const MovieCard = ({ movie, onClick }) => {
           color: var(--text-muted);
         }
 
-        .btn {
+        .movie-footer .btn {
           white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+          .movie-poster {
+            height: 300px;
+          }
+
+          .movie-footer {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .movie-footer .btn {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>
